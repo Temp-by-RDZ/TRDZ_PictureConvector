@@ -122,6 +122,7 @@ class WindowPicture: MvpAppCompatFragment(), MainView {
 			append(code)
 			append("\n")
 			when (code) {
+				-3 -> append(error!!.message)
 				-2 -> append(getString(R.string.error_desc_m2))
 				-1 -> append(getString(R.string.error_desc_m1))
 				in 200..299 -> append(getString(R.string.error_desc_200))
@@ -152,7 +153,7 @@ class WindowPicture: MvpAppCompatFragment(), MainView {
 
 	private fun covert(){
 		binding.megaButton.text = getString(R.string.status_go)
-		presenter.convert()
+		presenter.needConversion()
 	}
 
 	override fun loadingState(state: Boolean) {

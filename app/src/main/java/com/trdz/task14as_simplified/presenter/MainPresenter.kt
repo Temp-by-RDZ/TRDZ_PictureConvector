@@ -1,5 +1,6 @@
 package com.trdz.task14as_simplified.presenter
 
+import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Environment
@@ -9,8 +10,11 @@ import com.trdz.task14as_simplified.MyApp
 import com.trdz.task14as_simplified.base_utility.PREFIX_POD
 import com.trdz.task14as_simplified.model.Repository
 import com.trdz.task14as_simplified.model.RepositoryExecutor
+import com.trdz.task14as_simplified.model.ServersResult
 import com.trdz.task14as_simplified.view.segment_users.MainView
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
+import io.reactivex.rxjava3.core.Completable
+import io.reactivex.rxjava3.core.Maybe
 import io.reactivex.rxjava3.schedulers.Schedulers
 import moxy.InjectViewState
 import moxy.MvpPresenter
@@ -27,7 +31,7 @@ class MainPresenter(
 	private val router: Router = MyApp.instance.router,
 ): MvpPresenter<MainView>() {
 
-	var repeat: Int =-1
+	var repeat: Int = -2
 
 	override fun onFirstViewAttach() {
 		super.onFirstViewAttach()
@@ -37,16 +41,13 @@ class MainPresenter(
 	private fun connection() {
 		with(viewState) {
 			loadingState(true)
-			repository.connection(PREFIX_POD,getData(repeat))
+			repository.connection(PREFIX_POD, getData(repeat))
 				.subscribeOn(Schedulers.io())
 				.observeOn(AndroidSchedulers.mainThread())
 				.subscribe(
 					{
-						if (it.code in 200..299 ) {
-							onSuccess(it.name!!,it.description!!,it.url!!)
-							thread {
-								savingPicture(it.url)
-							}.start()
+						if (it.code in 200..299) {
+							connectionDone(it)
 						}
 						else {
 							onError(it.code)
@@ -55,7 +56,7 @@ class MainPresenter(
 						}
 						loadingState(false)
 					},
-					{ exception-> onError(-2,exception) })
+					{ exception -> onError(-3, exception) })
 		}
 	}
 
@@ -66,38 +67,51 @@ class MainPresenter(
 		return dateFormat.format(calendar.time)
 	}
 
-	private fun getDisc()= File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), "Picture Convert")
-
-	private fun savingPicture(url: String)  {
-		Log.d("@@@", "Prz - Start saving image")
-		val file = getDisc()
-		if (!file.exists() && !file.mkdirs()) {
-			Log.d("@@@", "Prz - Gallery not found");return
-		}
-		if (url=="") {
-			Log.d("@@@", "Prz - Image don't exist");return
-		}
-		else url.apply {
-			val newFile = File("${file.absolutePath}/image.jpeg")
-			Log.d("@@@", "Prz - preparing $newFile")
-			try {
-				val bitmap = getBitmapFromURL(this)
-				val fOut = FileOutputStream(newFile)
-				bitmap.compress(Bitmap.CompressFormat.JPEG, 85, fOut)
-				fOut.flush()
-				fOut.close()
-				Log.d("@@@", "Prz - Saving complete")
+	private fun connectionDone(material: ServersResult) {
+		viewState.onSuccess(material.name!!, material.description!!, material.url!!)
+		thread {
+			savingPicture(material.url).subscribe({
 				viewState.onSave()
-			}
-			catch (ignored: Exception) {
-				Log.d("@@@", "Prz - File corrupted")
-			}
-			catch (e: IOException) {
-				Log.d("@@@", e.message.toString())
-			}
-		}
+			}, { exception ->
+				viewState.onError(-3, exception)
+			})
+		}.start()
 
 	}
+
+	private fun getDisc() = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), "Picture Convert")
+
+	private fun savingPicture(url: String) =
+		Completable.create {
+			Log.d("@@@", "Prz - Start saving image")
+			val file = getDisc()
+			if (!file.exists() && !file.mkdirs()) {
+				it.onError(Throwable(message = "Gallery not found"))
+			}
+			if (url == "") {
+				it.onError(Throwable(message = "Image don't exist"))
+			}
+			else url.apply {
+				val newFile = File("${file.absolutePath}/image.jpeg")
+				Log.d("@@@", "Prz - preparing $newFile")
+				try {
+					val bitmap = getBitmapFromURL(this)
+					val fOut = FileOutputStream(newFile)
+					bitmap.compress(Bitmap.CompressFormat.JPEG, 85, fOut)
+					fOut.flush()
+					fOut.close()
+					Log.d("@@@", "Prz - Saving complete")
+					it.onComplete()
+				}
+				catch (ignored: FileNotFoundException) {
+					it.onError(Throwable(message = "File corrupted"))
+				}
+				catch (e: IOException) {
+					it.onError(e)
+				}
+			}
+		}
+
 
 	private fun getBitmapFromURL(src: String): Bitmap {
 		val url = URL(src)
@@ -108,24 +122,32 @@ class MainPresenter(
 		return BitmapFactory.decodeStream(input)
 	}
 
-	fun convert() {
-		Log.d("@@@", "Prz - Start converting image")
-		val file = getDisc()
-		if (!file.exists() && !file.mkdirs()) {
-			Log.d("@@@", "Prz - Gallery not found");return
-		}
-		val converted = File("${file.absolutePath}/converted.png")
-		try {
-			val bmp = BitmapFactory.decodeFile("${file.absolutePath}/image.jpeg")
-			val out = FileOutputStream(converted)
-			bmp.compress(Bitmap.CompressFormat.PNG, 100, out) //100-best quality
-			out.close()
-			Log.d("@@@", "Prz - Converting complete")
+	fun needConversion() {
+		convert().subscribe({
 			viewState.onDone()
-		}
-		catch (e: Exception) {
-			Log.d("@@@", "Prz - File corrupted")
-			e.printStackTrace()
-		}
+		}, { exception ->
+			viewState.onError(-3, exception)
+		})
 	}
+
+	private fun convert() =
+		Completable.create {
+			Log.d("@@@", "Prz - Start converting image")
+			val file = getDisc()
+			if (!file.exists() && !file.mkdirs()) {
+				it.onError(Throwable(message = "Gallery not found"))
+			}
+			val converted = File("${file.absolutePath}/converted.png")
+			try {
+				val bmp = BitmapFactory.decodeFile("${file.absolutePath}/image.jpeg")
+				val out = FileOutputStream(converted)
+				bmp.compress(Bitmap.CompressFormat.PNG, 100, out)
+				out.close()
+				Log.d("@@@", "Prz - Converting complete")
+				it.onComplete()
+			}
+			catch (e: Exception) {
+				it.onError(Throwable(message = "Conversation Error ${e.message}"))
+			}
+		}
 }
