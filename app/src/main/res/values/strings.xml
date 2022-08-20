@@ -11,4 +11,11 @@
     <string name="ERROR_TITLE" translatable="false">NO FILE</string>
     <string name="ERROR_DISCRIPTIOn">Missing information.</string>
     <string name="fon_description" translatable="false">Pretty Fon</string>
+    <string name="status_start" translatable="false">Ожидание</string>
+    <string name="status_error" translatable="false">Ошибка</string>
+    <string name="status_load" translatable="false">Сохраняется</string>
+    <string name="status_ready" translatable="false">Конвертировать?</string>
+    <string name="status_go" translatable="false">Конвертируется</string>
+    <string name="status_complete" translatable="false">Готово</string>
+    <string name="ааа">уләлә</string>
 </resources>

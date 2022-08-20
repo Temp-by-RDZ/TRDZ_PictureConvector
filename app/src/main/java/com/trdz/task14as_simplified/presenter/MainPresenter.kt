@@ -27,7 +27,7 @@ class MainPresenter(
 	private val router: Router = MyApp.instance.router,
 ): MvpPresenter<MainView>() {
 
-	var repeat: Int =-2
+	var repeat: Int =-1
 
 	override fun onFirstViewAttach() {
 		super.onFirstViewAttach()
@@ -46,7 +46,6 @@ class MainPresenter(
 							onSuccess(it.name!!,it.description!!,it.url!!)
 							thread {
 								savingPicture(it.url)
-								convert()
 							}.start()
 						}
 						else {
@@ -88,6 +87,7 @@ class MainPresenter(
 				fOut.flush()
 				fOut.close()
 				Log.d("@@@", "Prz - Saving complete")
+				viewState.onSave()
 			}
 			catch (ignored: Exception) {
 				Log.d("@@@", "Prz - File corrupted")
@@ -108,7 +108,7 @@ class MainPresenter(
 		return BitmapFactory.decodeStream(input)
 	}
 
-	private fun convert() {
+	fun convert() {
 		Log.d("@@@", "Prz - Start converting image")
 		val file = getDisc()
 		if (!file.exists() && !file.mkdirs()) {
@@ -121,6 +121,7 @@ class MainPresenter(
 			bmp.compress(Bitmap.CompressFormat.PNG, 100, out) //100-best quality
 			out.close()
 			Log.d("@@@", "Prz - Converting complete")
+			viewState.onDone()
 		}
 		catch (e: Exception) {
 			Log.d("@@@", "Prz - File corrupted")

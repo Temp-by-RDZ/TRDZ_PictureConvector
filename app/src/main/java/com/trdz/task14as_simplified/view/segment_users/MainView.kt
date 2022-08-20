@@ -9,5 +9,7 @@ import java.lang.Exception
 interface MainView: MvpView {
 	fun onSuccess(name: String, desc: String, url: String)
 	fun onError(code: Int = -1, error: Throwable? = null)
+	fun onSave()
+	fun onDone()
 	fun loadingState(state: Boolean)
 }

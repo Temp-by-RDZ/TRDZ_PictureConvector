@@ -29,6 +29,8 @@ class WindowPicture: MvpAppCompatFragment(), MainView {
 	private val bottomSheetBehavior get() = _bottomSheetBehavior!!
 	private val presenter by moxyPresenter { MainPresenter() }
 
+	private var state = 0
+
 	//endregion
 
 	//region Base realization
@@ -95,7 +97,7 @@ class WindowPicture: MvpAppCompatFragment(), MainView {
 			imageView.load(url) {
 				listener(
 					onSuccess = { _, _ ->
-						// do nothing
+						megaButton.text = getString(R.string.status_load)
 					},
 					onError = { request: ImageRequest, throwable: Throwable ->
 						Log.d("@@@", "App - coil error $throwable")
@@ -107,12 +109,13 @@ class WindowPicture: MvpAppCompatFragment(), MainView {
 		}
 	}
 
-	override fun onError(code: Int, error: Throwable?) {
+	override fun onError(code: Int, error: Throwable?) = with(binding) {
 		executors.getExecutor().showToast(requireContext(),"Ошибка...")
 		Log.d("@@@", "App - catch $code")
-		binding.imageView.setBackgroundResource(R.drawable.nofile)
-		binding.popupSheet.title.text = getString(R.string.ERROR_TITLE)
-		binding.popupSheet.explanation.text = StringBuilder(getString(R.string.ERROR_DISCRIPTIOn)).apply {
+		megaButton.text = getString(R.string.status_error)
+		imageView.setBackgroundResource(R.drawable.nofile)
+		popupSheet.title.text = getString(R.string.ERROR_TITLE)
+		popupSheet.explanation.text = StringBuilder(getString(R.string.ERROR_DISCRIPTIOn)).apply {
 			append("\n")
 			append(getString(R.string.Error_code_message))
 			append(" ")
@@ -130,6 +133,26 @@ class WindowPicture: MvpAppCompatFragment(), MainView {
 		}
 		bottomSheetBehavior.halfExpandedRatio = 0.35f
 		bottomSheetBehavior.state = BottomSheetBehavior.STATE_HALF_EXPANDED
+	}
+
+	override fun onSave() {
+		binding.megaButton.text = getString(R.string.status_ready)
+		state = 1
+		binding.megaButton.setOnClickListener {
+			if (state==1) {
+				state=2
+				covert()
+			} }
+	}
+
+	override fun onDone() {
+		state=3
+		binding.megaButton.text = getString(R.string.status_complete)
+	}
+
+	private fun covert(){
+		binding.megaButton.text = getString(R.string.status_go)
+		presenter.convert()
 	}
 
 	override fun loadingState(state: Boolean) {
