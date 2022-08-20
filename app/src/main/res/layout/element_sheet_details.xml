@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/bottom_sheet_container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#f6f6fa"
+    app:behavior_hideable="true"
+    app:behavior_peekHeight="50dp"
+    android:alpha="0.8"
+    app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
+
+    <View
+        android:id="@+id/bottom_sheet_line"
+        android:layout_width="@dimen/text_window_up_space"
+        android:layout_height="@dimen/small_line"
+        android:background="#663b4351"
+        android:layout_marginTop="@dimen/navigation_space"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/text_win_margin_up"
+        android:paddingStart="@dimen/text_win_title_padding"
+        android:paddingEnd="@dimen/text_win_title_padding"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/bottom_sheet_line"
+        tools:text="Two Clusters and a Comet" />
+
+    <TextView
+        android:id="@+id/explanation"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingStart="@dimen/text_win_desc_padding"
+        android:paddingEnd="@dimen/text_win_desc_padding"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/title"
+        tools:text="This lovely starfield spans some four full moons." />
+</androidx.constraintlayout.widget.ConstraintLayout>

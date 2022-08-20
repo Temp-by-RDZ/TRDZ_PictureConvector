@@ -1,0 +1,73 @@
+plugins {
+    id 'com.android.application'
+    id 'kotlin-android'
+    id "kotlin-android-extensions"
+    id 'org.jetbrains.kotlin.android'
+    id 'kotlin-kapt'
+}
+
+android {
+    compileSdk 33
+    buildFeatures{
+        viewBinding true
+    }
+
+    buildTypes.each{
+        Properties properties = new Properties()
+        properties.load(project.rootProject.file("apikey.properties").newDataInputStream())
+        def apiKey = properties.getProperty("NASA_API_KEY","")
+        it.buildConfigField "String","NASA_API_KEY",apiKey
+    }
+
+    defaultConfig {
+        applicationId "com.trdz.task14as_simplified"
+        minSdk 21
+        targetSdk 33
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+}
+
+
+dependencies {
+    implementation "com.github.moxy-community:moxy:2.2.2"                       //MOXY
+    implementation "com.github.moxy-community:moxy-ktx:2.2.2"                   //MOXY
+    implementation "com.github.moxy-community:moxy-androidx:2.2.2"              //MOXY
+    kapt "com.github.moxy-community:moxy-compiler:2.2.2"                        //MOXY
+    annotationProcessor "com.github.moxy-community:moxy-compiler:2.2.2"         //MOXY OTHER
+
+    implementation 'com.github.terrakok:cicerone:7.1'                           //Cicerone
+
+    implementation 'io.reactivex.rxjava3:rxandroid:3.0.0'                       //RxJava
+    implementation 'io.reactivex.rxjava3:rxjava:3.0.0'                          //RxJava
+
+    implementation 'io.coil-kt:coil:1.4.0'                              // image - coil
+    implementation("io.coil-kt:coil-svg:1.3.2")                         // image - coil
+    implementation 'com.squareup.retrofit2:retrofit:2.9.0'              // server - functional requests
+    implementation 'com.squareup.retrofit2:converter-gson:2.9.0'        // server - functional requests
+    implementation 'com.google.code.gson:gson:2.8.6'                    // code - json feature
+    implementation 'androidx.legacy:legacy-support-v4:1.0.0'            // code - legacy feature
+
+    implementation 'androidx.core:core-ktx:1.8.0'
+    implementation 'androidx.appcompat:appcompat:1.4.2'
+    implementation 'com.google.android.material:material:1.6.1'
+    testImplementation 'junit:junit:4.+'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.3'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
+}
