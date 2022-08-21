@@ -6,13 +6,14 @@ import android.os.Environment
 import android.util.Log
 import com.github.terrakok.cicerone.Router
 import com.trdz.task14as_simplified.MyApp
-import com.trdz.task14as_simplified.base_utility.PREFIX_POD
+import com.trdz.task14as_simplified.base_utility.*
 import com.trdz.task14as_simplified.model.Repository
 import com.trdz.task14as_simplified.model.RepositoryExecutor
 import com.trdz.task14as_simplified.model.ServersResult
 import com.trdz.task14as_simplified.view.segment_picture.MainView
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Completable
+import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.schedulers.Schedulers
 import moxy.MvpPresenter
 import java.io.*
@@ -20,6 +21,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
 
 class MainPresenter(
@@ -28,7 +30,8 @@ class MainPresenter(
 ): MvpPresenter<MainView>() {
 
 	private var repeat: Int = -1
-	private var state = 0
+	private var state = STATE_INI
+	private lateinit var convertingProcess: Disposable
 
 	override fun onFirstViewAttach() {
 		super.onFirstViewAttach()
@@ -66,15 +69,14 @@ class MainPresenter(
 
 	private fun connectionDone(material: ServersResult) {
 		viewState.onSuccess(material.name!!, material.description!!, material.url!!)
-		thread {
-			savingPicture(material.url).subscribe({
-				state = 1
-				viewState.onSave()
-			}, { exception ->
-				viewState.onError(-3, exception)
-			})
-		}.start()
-
+		savingPicture(material.url)
+			.subscribeOn(Schedulers.io())
+			.subscribe({
+			state = STATE_SAVED
+			viewState.onSave()
+		}, { exception ->
+			viewState.onError(-3, exception)
+		})
 	}
 
 	private fun getDisc() = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM), "Picture Convert")
@@ -83,12 +85,8 @@ class MainPresenter(
 		Completable.create {
 			Log.d("@@@", "Prz - Start saving image")
 			val file = getDisc()
-			if (!file.exists() && !file.mkdirs()) {
-				it.onError(Throwable(message = "Gallery not found"))
-			}
-			if (url == "") {
-				it.onError(Throwable(message = "Image don't exist"))
-			}
+			if (!file.exists() && !file.mkdirs()) { it.onError(Throwable(message = "Gallery not found")) }
+			if (url == "") { it.onError(Throwable(message = "Image don't exist")) }
 			else url.apply {
 				val newFile = File("${file.absolutePath}/image.jpeg")
 				Log.d("@@@", "Prz - preparing $newFile")
@@ -120,24 +118,34 @@ class MainPresenter(
 	}
 
 	fun needConversion() {
-		if ((state!=1)) return
-		viewState.onConvert()
-		state=2
-		convert().subscribe({
-			state=3
-			viewState.onDone()
-		}, { exception ->
-			viewState.onError(-3, exception)
-		})
+		when (state) {
+			STATE_COVERT -> { abortConversion(); return }
+			STATE_SAVED -> {
+				viewState.onConvert()
+				state = STATE_COVERT
+				convertingProcess = convert()
+					.delay(1, TimeUnit.SECONDS)
+					.subscribe({
+						state = STATE_DONE
+						viewState.onDone()
+					}, { exception ->
+						viewState.onError(-3, exception)
+					})
+			}
+		}
+	}
+
+	private fun abortConversion() {
+		convertingProcess.dispose()
+		viewState.onError(-3, Throwable(message = "User abort process"))
+		state = 1
 	}
 
 	private fun convert() =
 		Completable.create {
 			Log.d("@@@", "Prz - Start converting image")
 			val file = getDisc()
-			if (!file.exists() && !file.mkdirs()) {
-				it.onError(Throwable(message = "Gallery not found"))
-			}
+			if (!file.exists() && !file.mkdirs()) { it.onError(Throwable(message = "Gallery not found")) }
 			val converted = File("${file.absolutePath}/converted.png")
 			try {
 				val bmp = BitmapFactory.decodeFile("${file.absolutePath}/image.jpeg")

@@ -27,7 +27,6 @@ class WindowPicture: MvpAppCompatFragment(), MainView {
 	private val bottomSheetBehavior get() = _bottomSheetBehavior!!
 	private val presenter by moxyPresenter { MainPresenter() }
 
-
 	//endregion
 
 	//region Base realization
@@ -107,28 +106,38 @@ class WindowPicture: MvpAppCompatFragment(), MainView {
 	}
 
 	override fun onError(code: Int, error: Throwable?) = with(binding) {
-		executors.getExecutor().showToast(requireContext(),"Ошибка...")
 		Log.d("@@@", "App - catch $code")
+		executors.getExecutor().showToast(requireContext(), "Ошибка...")
 		megaButton.text = getString(R.string.status_error)
-		imageView.setBackgroundResource(R.drawable.nofile)
-		popupSheet.title.text = getString(R.string.ERROR_TITLE)
-		popupSheet.explanation.text = StringBuilder(getString(R.string.ERROR_DISCRIPTIOn)).apply {
-			append("\n")
-			append(getString(R.string.Error_code_message))
-			append(" ")
-			append(code)
-			append("\n")
-			when (code) {
-				-3 -> append(error!!.message)
-				-2 -> append(getString(R.string.error_desc_m2))
-				-1 -> append(getString(R.string.error_desc_m1))
-				in 200..299 -> append(getString(R.string.error_desc_200))
-				in 300..399 -> append(getString(R.string.error_desc_300))
-				in 400..499 -> append(getString(R.string.error_desc_400))
-				in 500..599 -> append(getString(R.string.error_desc_500))
-				else -> append(getString(R.string.error_desc_0))
+		if (code > -3) {
+			imageView.setBackgroundResource(R.drawable.nofile)
+			popupSheet.title.text = getString(R.string.ERROR_TITLE)
+			popupSheet.explanation.text = StringBuilder(getString(R.string.ERROR_DISCRIPTIOn)).apply {
+				append("\n")
+				append(getString(R.string.Error_code_message))
+				append(" ")
+				append(code)
+				append("\n")
+				when (code) {
+					-3 -> append(error!!.message)
+					-2 -> append(getString(R.string.error_desc_m2))
+					-1 -> append(getString(R.string.error_desc_m1))
+					in 200..299 -> append(getString(R.string.error_desc_200))
+					in 300..399 -> append(getString(R.string.error_desc_300))
+					in 400..499 -> append(getString(R.string.error_desc_400))
+					in 500..599 -> append(getString(R.string.error_desc_500))
+					else -> append(getString(R.string.error_desc_0))
+				}
 			}
 		}
+		else {
+			popupSheet.title.text = StringBuilder(getString(R.string.Error_code_message)).apply {
+				append(" ")
+				append(code)
+			}
+			popupSheet.explanation.text = error!!.message
+		}
+
 		bottomSheetBehavior.halfExpandedRatio = 0.35f
 		bottomSheetBehavior.state = BottomSheetBehavior.STATE_HALF_EXPANDED
 	}
@@ -147,7 +156,7 @@ class WindowPicture: MvpAppCompatFragment(), MainView {
 	}
 
 	override fun loadingState(state: Boolean) {
-		binding.loadingLayout.visibility = if (state)  View.VISIBLE
+		binding.loadingLayout.visibility = if (state) View.VISIBLE
 		else View.GONE
 	}
 	//endregion
