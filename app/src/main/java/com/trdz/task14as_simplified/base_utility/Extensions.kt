@@ -57,6 +57,7 @@ fun Context.hideKeyboard(view: View) {
 }
 //endregion
 
+//region Pictures
 fun ImageView.loadSvg(url: String) {
 	val imageLoader = ImageLoader.Builder(this.context)
 		.componentRegistry { add(SvgDecoder(this@loadSvg.context)) }
@@ -69,4 +70,5 @@ fun ImageView.loadSvg(url: String) {
 		.build()
 	imageLoader.enqueue(request)
 }
+//endregion
 

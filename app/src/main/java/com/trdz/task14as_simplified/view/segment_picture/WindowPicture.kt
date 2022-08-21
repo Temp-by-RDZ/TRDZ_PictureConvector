@@ -1,6 +1,5 @@
-package com.trdz.task14as_simplified.view.segment_users
+package com.trdz.task14as_simplified.view.segment_picture
 
-import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.*
@@ -16,7 +15,6 @@ import com.trdz.task14as_simplified.view.Leader
 import com.trdz.task14as_simplified.view.MainActivity
 import moxy.MvpAppCompatFragment
 import moxy.ktx.moxyPresenter
-import java.lang.Exception
 
 class WindowPicture: MvpAppCompatFragment(), MainView {
 
@@ -29,7 +27,6 @@ class WindowPicture: MvpAppCompatFragment(), MainView {
 	private val bottomSheetBehavior get() = _bottomSheetBehavior!!
 	private val presenter by moxyPresenter { MainPresenter() }
 
-	private var state = 0
 
 	//endregion
 
@@ -138,22 +135,15 @@ class WindowPicture: MvpAppCompatFragment(), MainView {
 
 	override fun onSave() {
 		binding.megaButton.text = getString(R.string.status_ready)
-		state = 1
-		binding.megaButton.setOnClickListener {
-			if (state==1) {
-				state=2
-				covert()
-			} }
+		binding.megaButton.setOnClickListener { presenter.needConversion() }
+	}
+
+	override fun onConvert() {
+		binding.megaButton.text = getString(R.string.status_go)
 	}
 
 	override fun onDone() {
-		state=3
 		binding.megaButton.text = getString(R.string.status_complete)
-	}
-
-	private fun covert(){
-		binding.megaButton.text = getString(R.string.status_go)
-		presenter.needConversion()
 	}
 
 	override fun loadingState(state: Boolean) {

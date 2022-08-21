@@ -14,12 +14,6 @@
         <!-- Element styles. -->
     </style>
 
-
-    <style name="eva" >
-        <item name="android:ambientShadowAlpha">0.2</item>
-        <item name="android:spotShadowAlpha">1</item>
-    </style>
-
     <style name="MyBaseTheme" parent="CoreTheme">
         <item name="superColor_1">@color/main_color_first</item>
         <item name="superColor_2">@color/main_color_second</item>

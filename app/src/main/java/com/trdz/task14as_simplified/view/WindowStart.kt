@@ -7,7 +7,7 @@ import android.view.*
 import androidx.fragment.app.Fragment
 import com.trdz.task14as_simplified.base_utility.EFFECT_RISE
 import com.trdz.task14as_simplified.databinding.FragmentWindowStartBinding
-import com.trdz.task14as_simplified.view.segment_users.WindowPicture
+import com.trdz.task14as_simplified.view.segment_picture.WindowPicture
 
 class WindowStart: Fragment() {
 

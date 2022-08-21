@@ -1,6 +1,5 @@
 package com.trdz.task14as_simplified.presenter
 
-import android.content.res.Resources
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Environment
@@ -11,19 +10,16 @@ import com.trdz.task14as_simplified.base_utility.PREFIX_POD
 import com.trdz.task14as_simplified.model.Repository
 import com.trdz.task14as_simplified.model.RepositoryExecutor
 import com.trdz.task14as_simplified.model.ServersResult
-import com.trdz.task14as_simplified.view.segment_users.MainView
+import com.trdz.task14as_simplified.view.segment_picture.MainView
 import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.core.Completable
-import io.reactivex.rxjava3.core.Maybe
 import io.reactivex.rxjava3.schedulers.Schedulers
-import moxy.InjectViewState
 import moxy.MvpPresenter
 import java.io.*
 import java.net.HttpURLConnection
 import java.net.URL
 import java.text.SimpleDateFormat
 import java.util.*
-import java.util.concurrent.TimeUnit
 import kotlin.concurrent.thread
 
 class MainPresenter(
@@ -31,7 +27,8 @@ class MainPresenter(
 	private val router: Router = MyApp.instance.router,
 ): MvpPresenter<MainView>() {
 
-	var repeat: Int = -2
+	private var repeat: Int = -1
+	private var state = 0
 
 	override fun onFirstViewAttach() {
 		super.onFirstViewAttach()
@@ -71,6 +68,7 @@ class MainPresenter(
 		viewState.onSuccess(material.name!!, material.description!!, material.url!!)
 		thread {
 			savingPicture(material.url).subscribe({
+				state = 1
 				viewState.onSave()
 			}, { exception ->
 				viewState.onError(-3, exception)
@@ -112,7 +110,6 @@ class MainPresenter(
 			}
 		}
 
-
 	private fun getBitmapFromURL(src: String): Bitmap {
 		val url = URL(src)
 		val connection: HttpURLConnection = url.openConnection() as HttpURLConnection
@@ -123,7 +120,11 @@ class MainPresenter(
 	}
 
 	fun needConversion() {
+		if ((state!=1)) return
+		viewState.onConvert()
+		state=2
 		convert().subscribe({
+			state=3
 			viewState.onDone()
 		}, { exception ->
 			viewState.onError(-3, exception)
